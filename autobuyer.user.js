@@ -1846,8 +1846,9 @@
             window.deactivateAutoBuyer(true);
         }
 
-        if (window.futStatistics.coinsNumber < 50001) {
+        if (services.User.getUser().coins.amount < 50001) {
             window.deactivateAutoBuyer(true);
+            writeToDebugLog('Coins low');
         }
     }
 
