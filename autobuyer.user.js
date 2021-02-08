@@ -1845,6 +1845,10 @@
         if (window.buyCardCount && window.purchasedCardCount >= window.buyCardCount) {
             window.deactivateAutoBuyer(true);
         }
+
+        if (window.futStatistics.coinsNumber < 50001) {
+            window.deactivateAutoBuyer(true);
+        }
     }
 
     window.pauseIfRequired = function () {
