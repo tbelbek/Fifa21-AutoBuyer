@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FUT 21 Autobuyer Menu with TamperMonkey
 // @namespace    http://tampermonkey.net/
-// @version      2.0.8
+// @version      2.0.9
 // @updateURL    https://raw.githubusercontent.com/chithakumar13/Fifa21-AutoBuyer/master/autobuyer.js
 // @downloadURL  https://raw.githubusercontent.com/chithakumar13/Fifa21-AutoBuyer/master/autobuyer.js
 // @description  FUT Snipping Tool
@@ -17,6 +17,17 @@
 
 (function () {
     'use strict';
+
+    let ultimateTeamSessionId;
+
+    const setRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
+    XMLHttpRequest.prototype.setRequestHeader = function() {
+        const [sessionIdKey, sessionIdValue] = arguments;
+        if (sessionIdKey === 'X-UT-SID') {
+            ultimateTeamSessionId = sessionIdValue;
+        }
+        return setRequestHeader.apply(this, arguments);
+    };
 
     window.controllerInstance = null;
     window.UTAutoBuyerViewController = function () {
@@ -49,12 +60,12 @@
     var _searchViewModel = null;
 
 
-    // DIV names
+// DIV names
     function makeid(length) {
-        var result = '';
-        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var result           = '';
+        var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         var charactersLength = characters.length;
-        for (var i = 0; i < length; i++) {
+        for ( var i = 0; i < length; i++ ) {
             result += characters.charAt(Math.floor(Math.random() * charactersLength));
         }
         return result;
@@ -118,7 +129,8 @@
         nameProxyPort = '#elem_' + makeid(15),
         nameProxyLogin = '#elem_' + makeid(15),
         nameAntiCaptchKey = '#elem_' + makeid(15),
-        nameProxyPassword = '#elem_' + makeid(15);
+        nameProxyPassword = '#elem_' + makeid(15),
+        nameAbProfitMargin = '#elem_' + makeid(15);
 
     window.loadFilter = function () {
         var filterName = $('select[name=filters] option').filter(':selected').val();
@@ -360,7 +372,8 @@
                     writeToDebugLog(`Found ${window.userWatchItems.length} items in users watch list and ignored from selling`);
                 }
                 window.notify('Autobuyer Started');
-            } else {
+            }
+            else {
                 window.notify('Autobuyer Resumed');
             }
         });
@@ -413,12 +426,12 @@
         if (!this.initialized) {
             //getAppMain().superclass(),
             this._viewmodel || (this._viewmodel = new viewmodels.BucketedItemSearch),
-                this._viewmodel.searchCriteria.type === enums.SearchType.ANY && (this._viewmodel.searchCriteria.type = enums.SearchType.PLAYER);
+            this._viewmodel.searchCriteria.type === enums.SearchType.ANY && (this._viewmodel.searchCriteria.type = enums.SearchType.PLAYER);
 
             _searchViewModel = this._viewmodel;
 
-            var t = gConfigurationModel.getConfigObject(models.ConfigurationModel.KEY_ITEMS_PER_PAGE),
-                count = 1 + (utils.JS.isValid(t) ? t[models.ConfigurationModel.ITEMS_PER_PAGE.TRANSFER_MARKET] : 15);
+            var t = gConfigurationModel.getConfigObject(models.ConfigurationModel.KEY_ITEMS_PER_PAGE)
+                , count = 1 + (utils.JS.isValid(t) ? t[models.ConfigurationModel.ITEMS_PER_PAGE.TRANSFER_MARKET] : 15);
             this._viewmodel.searchCriteria.count = count,
                 this._viewmodel.searchFeature = enums.ItemSearchFeature.MARKET;
             var view = this.getView();
@@ -429,8 +442,8 @@
                 view.addTarget(this, this._eMaxBidPriceChanged, UTMarketSearchFiltersView.Event.MAX_BID_PRICE_CHANGE),
                 view.addTarget(this, this._eMinBuyPriceChanged, UTMarketSearchFiltersView.Event.MIN_BUY_PRICE_CHANGE),
                 view.addTarget(this, this._eMaxBuyPriceChanged, UTMarketSearchFiltersView.Event.MAX_BUY_PRICE_CHANGE),
-                this._viewmodel.getCategoryTabVisible() && (view.initTabMenuComponent(),
-                    view.getTabMenuComponent().addTarget(this, this._eSearchCategoryChanged, enums.Event.TAP)),
+            this._viewmodel.getCategoryTabVisible() && (view.initTabMenuComponent(),
+                view.getTabMenuComponent().addTarget(this, this._eSearchCategoryChanged, enums.Event.TAP)),
                 this._squadContext ? isPhone() || view.addClass("narrow") : view.addClass("floating"),
                 view.getPlayerNameSearch().addTarget(this, this._ePlayerNameChanged, enums.Event.CHANGE),
                 view.__root.style = "width: 50%; float: left;";
@@ -554,7 +567,8 @@
 
         if (minBuy) {
             window.notify("Succesfully computed the price", enums.UINotificationType.POSITIVE);
-        } else {
+        }
+        else {
             window.notify("Unable to calculate price", enums.UINotificationType.NEGATIVE);
         }
 
@@ -574,14 +588,13 @@
         while (!isMinFound) {
             if (++currentCount === 10) {
                 isMinFound = true;
-            } else {
+            }
+            else {
                 sendPinEvents("Transfer Market Search");
 
                 services.Item.clearTransferMarketCache();
 
-                let items = await window.getBinSearchResult({
-                    ...criteria
-                });
+                let items = await window.getBinSearchResult({...criteria});
                 if (items.length) {
 
                     allPrices = allPrices.concat(items.map(i => i._auction.buyNowPrice));
@@ -599,7 +612,8 @@
                         criteria.maxBuy = window.fixRandomPrice(window.getSellBidPrice(currentMin));
                     }
                     await window.waitAsync(2);
-                } else {
+                }
+                else {
                     isMinFound = true;
                 }
             }
@@ -780,6 +794,17 @@
                         '<hr>' +
                         '<div class="search-price-header">' +
                         '   <h1 class="secondary">Sell settings:</h1>' +
+                        '</div>' +
+                        '<div><br></div>' +
+                        '<div class="price-filter">' +
+                        '   <div class="info">' +
+                        '       <span class="secondary label">Profit margin:</span><br/><small>(Sell this percentage over the buy price):</small>' +
+                        '   </div>' +
+                        '   <div class="buttonInfo">' +
+                        '       <div class="inputBox">' +
+                        '           <input type="tel" class="numericInput" id="' + nameAbProfitMargin.substring(1) + '" placeholder="10">' +
+                        '       </div>' +
+                        '   </div>' +
                         '</div>' +
                         '<div><br></div>' +
                         '<div class="price-filter">' +
@@ -1184,10 +1209,7 @@
         setTimeout(function () {
 
             let settingsJson = {};
-            settingsJson.searchCriteria = {
-                criteria: _searchViewModel.searchCriteria,
-                playerData: _searchViewModel.playerData
-            };
+            settingsJson.searchCriteria = { criteria: _searchViewModel.searchCriteria, playerData: _searchViewModel.playerData };
 
             settingsJson.abSettings = {};
 
@@ -1271,7 +1293,7 @@
                 settingsJson.abSettings.addDelayAfterBuy = window.addDelayAfterBuy;
             }
 
-            if (window.addFilterGK) {
+            if(window.addFilterGK){
                 settingsJson.abSettings.addFilterGK = window.addFilterGK;
             }
 
@@ -1324,8 +1346,8 @@
 
             if (filterName) {
                 filterName = filterName.toUpperCase();
-                window.checkAndOption(nameFilterDropdown, filterName);
-                window.checkAndOption(nameSelectedFilter, filterName);
+                window.checkAndOption(nameFilterDropdown,filterName);
+                window.checkAndOption(nameSelectedFilter,filterName);
 
                 $(`select[name=filters] option[value="${filterName}"]`).attr("selected", true);
                 GM_setValue(filterName, JSON.stringify(settingsJson));
@@ -1338,7 +1360,7 @@
         }, 200);
     }
 
-    window.checkAndOption = function (dropdownSelector, optionName) {
+    window.checkAndOption = function(dropdownSelector, optionName){
         let exist = false;
         $(`${dropdownSelector} option`).each(function () {
             if (this.value === optionName) {
@@ -1347,7 +1369,7 @@
             }
         });
 
-        if (!exist) {
+        if(!exist){
             $(dropdownSelector).append($('<option></option>').attr('value', optionName).text(optionName));
         }
     }
@@ -1638,9 +1660,7 @@
             wait = jQuery(nameAbWaitTime).val().split('-').map(a => parseInt(a));
         }
         window.searchCount++;
-        var waitTime = Math.round((Math.random() * (wait[1] - wait[0]) + wait[0])) * 1000;
-        console.log(waitTime);
-        return waitTime;
+        return (Math.round((Math.random() * (wait[1] - wait[0]) + wait[0])) * 1000);
     };
 
     window.getTimerProgress = function (timer) {
@@ -1697,6 +1717,9 @@
     window.getItemName = function (itemObj) {
         return window.format_string(itemObj._staticData.name, 15);
     };
+    window.getProfitMargin = function () {
+        return parseInt(document.querySelector(nameAbProfitMargin).value, 10) / 100.0;
+    }
     window.winCount = 0;
     window.lossCount = 0;
     window.bidCount = 0;
@@ -1842,7 +1865,7 @@
             if (time) {
                 time = time * multipler * 1000;
 
-                time = window.getRandomArbitrary(0, time);
+time = window.getRandomArbitrary(0, time);
 
                 window.deactivateAutoBuyer();
 
@@ -1875,7 +1898,8 @@
         if (!window.eachFilterSearch) {
             if (jQuery(nameAbNumberFilterSearch).val() !== '') {
                 window.eachFilterSearch = parseInt(jQuery(nameAbNumberFilterSearch).val());
-            } else {
+            }
+            else {
                 window.eachFilterSearch = 1
             }
         }
@@ -1904,18 +1928,14 @@
         // Randomize search criteria min bid to clear cache
         if (window.useRandMinBid) {
             let user_min_bid_txt = $(nameAbRandMinBidInput).val();
-            if (user_min_bid_txt == '') {
-                user_min_bid_txt = '300'
-            }
+            if (user_min_bid_txt == '') { user_min_bid_txt = '300' }
             let user_min_bid = Math.round(parseInt(user_min_bid_txt));
             searchCriteria.minBid = window.fixRandomPrice(window.getRandNum(0, user_min_bid));
             window.currentPage = 1;
         }
         if (window.useRandMinBuy) {
             let user_min_buy_txt = $(nameAbRandMinBuyInput).val();
-            if (user_min_buy_txt == '') {
-                user_min_buy_txt = '300'
-            }
+            if (user_min_buy_txt == '') { user_min_buy_txt = '300' }
             let user_min_buy = Math.round(parseInt(user_min_buy_txt));
             searchCriteria.minBuy = window.fixRandomPrice(window.getRandNum(0, user_min_buy));
             window.currentPage = 1;
@@ -2037,7 +2057,7 @@
                     }
                     // ============================================================================================================
 
-                    if (player.preferredPosition == 0 && window.addFilterGK == true) {
+                    if(player.preferredPosition == 0 && window.addFilterGK == true){
                         action_txt = 'skip >>> (is a Goalkeeper)';
                         let player_name = window.getItemName(player);
                         writeToDebugLog("| " + rating_txt + ' | ' + player_name + ' | ' + bid_txt + ' | ' + buy_txt + ' | ' + expire_time + ' | ' + action_txt);
@@ -2106,7 +2126,8 @@
                         writeToLog('[!!!] Captcha got triggered, trying to solve it');
                         writeToLog('------------------------------------------------------------------------------------------');
                         window.solveCaptcha();
-                    } else {
+                    }
+                    else {
                         window.showCaptchaLogs();
                     }
                 } else {
@@ -2121,7 +2142,7 @@
         }));
     };
 
-    window.showCaptchaLogs = function () {
+    window.showCaptchaLogs = function() {
 
         window.sendNotificationToUser('Captcha, please solve the problem so that the bot can work again.');
 
@@ -2140,11 +2161,11 @@
         var websitePublicKey = "A4EECF77-AC87-8C8D-5754-BF882F72063B";
 
         var proxyAddress = jQuery(nameProxyAddress).val();
-        var proxyPort = jQuery(nameProxyPort).val();
+        var proxyPort =jQuery(nameProxyPort).val();
         var proxyLogin = jQuery(nameProxyLogin).val();
         var proxyPassword = jQuery(nameProxyPassword).val();
 
-        if (!proxyAddress || !proxyPort || !apikey) {
+        if(!proxyAddress || !proxyPort || !apikey){
             writeToLog('Proxy info not filled properly');
             window.showCaptchaLogs();
             return;
@@ -2161,19 +2182,20 @@
 
                     let payload = {
                         "clientKey": apikey,
-                        "task": {
-                            "type": "FunCaptchaTask",
-                            "websiteURL": websiteURL,
-                            "websitePublicKey": websitePublicKey,
-                            "funcaptchaApiJSSubdomain": "ea-api.arkoselabs.com",
-                            "data": responseData.response,
-                            "proxyType": "http",
-                            "proxyAddress": proxyAddress,
-                            "proxyPort": proxyPort,
-                            "proxyLogin": proxyLogin,
-                            "proxyPassword": proxyPassword,
-                            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36"
-                        }
+                        "task":
+                            {
+                                "type": "FunCaptchaTask",
+                                "websiteURL": websiteURL,
+                                "websitePublicKey": websitePublicKey,
+                                "funcaptchaApiJSSubdomain": "ea-api.arkoselabs.com",
+                                "data": responseData.response,
+                                "proxyType": "http",
+                                "proxyAddress": proxyAddress,
+                                "proxyPort": proxyPort,
+                                "proxyLogin": proxyLogin,
+                                "proxyPassword": proxyPassword,
+                                "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36"
+                            }
                     };
 
                     var xhr = new XMLHttpRequest();
@@ -2321,31 +2343,67 @@
             let price_txt = window.format_string(price.toString(), 6)
             let player_name = window.getItemName(player);
             if (data.success) {
+                if (sellPrice >= 0) {
+                    if (isBin) {
+                        window.purchasedCardCount++;
+                    }
 
-                if (isBin) {
-                    window.purchasedCardCount++;
-                }
+                    if (isBin && sellPrice !== 0 && !isNaN(sellPrice)) {
+                        window.winCount++;
+                        let sym = " W:" + window.format_string(window.winCount.toString(), 4);
+                        writeToLog(sym + " | " + player_name + ' | ' + price_txt + ((isBin) ? ' | buy | success | selling for: ' + sellPrice : ' | bid | success |' + ' selling for: ' + sellPrice));
+                        window.play_audio('card_won');
+                        window.sellRequestTimeout = window.setTimeout(function () {
+                            services.Item.list(player, window.getSellBidPrice(sellPrice), sellPrice, 3600);
+                        }, window.getRandomWait());
+                    } else {
+                        window.bidCount++;
+                        services.Item.move(player, enums.FUTItemPile.CLUB).observe(this, (function (sender, moveResponse) {
+                            let sym = " B:" + window.format_string(window.bidCount.toString(), 4);
+                            writeToLog(sym + " | " + player_name + ' | ' + price_txt + ((isBin) ? ' | buy | success | move to club' : ' | bid | success | waiting to expire'));
+                        }));
+                    }
 
-                if (isBin && sellPrice !== 0 && !isNaN(sellPrice)) {
-                    window.winCount++;
-                    let sym = " W:" + window.format_string(window.winCount.toString(), 4);
-                    writeToLog(sym + " | " + player_name + ' | ' + price_txt + ((isBin) ? ' | buy | success | selling for: ' + sellPrice : ' | bid | success |' + ' selling for: ' + sellPrice));
-                    window.play_audio('card_won');
-                    window.sellRequestTimeout = window.setTimeout(function () {
-                        services.Item.list(player, window.getSellBidPrice(sellPrice), sellPrice, 3600);
-                    }, window.getRandomWait());
+                    if (jQuery(nameTelegramBuy).val() == 'B' || jQuery(nameTelegramBuy).val() == 'A') {
+                        window.sendNotificationToUser("| " + player_name.trim() + ' | ' + price_txt.trim() + ' | buy |');
+                    }
                 } else {
-                    window.bidCount++;
-                    services.Item.move(player, enums.FUTItemPile.CLUB).observe(this, (function (sender, moveResponse) {
-                        let sym = " B:" + window.format_string(window.bidCount.toString(), 4);
-                        writeToLog(sym + " | " + player_name + ' | ' + price_txt + ((isBin) ? ' | buy | success | move to club' : ' | bid | success | waiting to expire'));
-                    }));
-                }
+                    findPlayerLowestPrice(player.resourceId, function(sellPrice) {
+                        if (isBin) {
+                            window.purchasedCardCount++;
+                        }
 
-                if (jQuery(nameTelegramBuy).val() == 'B' || jQuery(nameTelegramBuy).val() == 'A') {
-                    window.sendNotificationToUser("| " + player_name.trim() + ' | ' + price_txt.trim() + ' | buy |');
-                }
+                        if (sellPrice === 0) {
+                            sellPrice = -1;
+                        } else if (price >= sellPrice) {
+                            sellPrice = window.getBuyBidPrice(price);
+                        } else if (price >= window.getSellBidPrice(sellPrice)) {
+                            sellPrice = sellPrice;
+                        } else {
+                            sellPrice = window.getSellBidPrice(sellPrice);
+                        }
 
+                        if (isBin && sellPrice !== 0 && !isNaN(sellPrice)) {
+                            window.winCount++;
+                            let sym = " W:" + window.format_string(window.winCount.toString(), 4);
+                            writeToLog(sym + " | " + player_name + ' | ' + price_txt + ((isBin) ? ' | buy | success | selling for: ' + sellPrice : ' | bid | success |' + ' selling for: ' + sellPrice));
+                            window.play_audio('card_won');
+                            window.sellRequestTimeout = window.setTimeout(function () {
+                                services.Item.list(player, window.getSellBidPrice(sellPrice), sellPrice, 3600);
+                            }, window.getRandomWait());
+                        } else {
+                            window.bidCount++;
+                            services.Item.move(player, enums.FUTItemPile.CLUB).observe(this, (function (sender, moveResponse) {
+                                let sym = " B:" + window.format_string(window.bidCount.toString(), 4);
+                                writeToLog(sym + " | " + player_name + ' | ' + price_txt + ((isBin) ? ' | buy | success | move to club' : ' | bid | success | waiting to expire'));
+                            }));
+                        }
+
+                        if (jQuery(nameTelegramBuy).val() == 'B' || jQuery(nameTelegramBuy).val() == 'A') {
+                            window.sendNotificationToUser("| " + player_name.trim() + ' | ' + price_txt.trim() + ' | buy |');
+                        }
+                    });
+                }
             } else {
                 window.lossCount++;
                 let sym = " L:" + window.format_string(window.lossCount.toString(), 4);
@@ -2379,18 +2437,18 @@
         }
 
         if (bin > 1000 && bin <= 10000) {
-            return bin - 200;
+            return bin - 100;
         }
 
         if (bin > 10000 && bin <= 50000) {
-            return bin - 500;
+            return bin - 250;
         }
 
         if (bin > 50000 && bin <= 100000) {
-            return bin - 1000;
+            return bin - 500;
         }
 
-        return bin - 2000;
+        return bin - 1000;
     };
 
     window.getBuyBidPrice = function (bin) {
@@ -2439,7 +2497,8 @@
             }
 
             if (window.futStatistics.unsoldItems && window.reListEnabled) {
-                services.Item.relistExpiredAuctions().observe(this, function (t, response) {});
+                services.Item.relistExpiredAuctions().observe(this, function (t, response) {
+                });
             }
 
             window.futStatistics.activeTransfers = response.data.items.filter(function (item) {
@@ -2500,12 +2559,94 @@
     }
 
     window.clearSoldItems = function () {
-        services.Item.clearSoldItems().observe(this, function (t, response) {});
+        services.Item.clearSoldItems().observe(this, function (t, response) {
+        });
     }
 
-    window.getRandomPause = function getRandomArbitrary(min, max) {
+        window.getRandomPause = function getRandomArbitrary(min, max) {
         var randomNum = Math.random() * (max - min) + min;
         console.log(randomNum);
         return randomNum;
+    }
+
+    async function findPlayerLowestPrice(playerId, callbackFn) {
+        let lastPrice = 0;
+        let price = 0;
+        let count = 0;
+        let tryCount = 0;
+
+        if (window.useFutBin === true) {
+            price = await makeRequest('GET', `https://www.futbin.com/21/playerPrices?player=${playerId}`)
+        }
+
+        do {
+            tryCount++;
+            lastPrice = price;
+            const info = await findMinPlayerPriceFromMarket(playerId, price <= 0 ? null : window.getSellBidPrice(price));
+            price = info.price;
+            count = info.count;
+
+            if(count >= 21) {
+                const randomTimeout = Math.round(Math.random() * 1000 + 1000);
+                await delay(randomTimeout);
+            }
+        } while (count >= 21);
+
+        if (count <= 0) {
+            price = window.getSellBidPrice(lastPrice);
+        }
+
+        writeToDebugLog(`Search attempts to find lower price: ${tryCount}`);
+        callbackFn(price);
+    }
+
+    function delay(timeout) {
+        return new Promise(function (resolve, reject) {
+            setTimeout(function() {
+                resolve();
+            }, timeout);
+        });
+    }
+
+    async function findMinPlayerPriceFromMarket(playerId, maxPrice) {
+        const searchPlayerPriceUrl = "https://utas.external.s2.fut.ea.com/ut/game/fifa21/transfermarket?num=21&start=0&type=player&maskedDefId=";
+        let maxPriceParam = "&maxb=";
+     
+        let requestUrl = `${searchPlayerPriceUrl}${playerId}`;
+        if (maxPrice != null) {
+            requestUrl = `${requestUrl}${maxPriceParam}${maxPrice}`;
+        }
+
+        const response = JSON.parse(await makeRequest("GET", requestUrl, ultimateTeamSessionId));
+        let currentMinPrice = response.auctionInfo.map(ai => ai.buyNowPrice).sort((a,b) => a - b).shift();
+
+        return {price: currentMinPrice, count: response.auctionInfo.length};
+    }
+
+    function makeRequest(method, url, ultimateTeamSessionId) {
+        return new Promise(function (resolve, reject) {
+            let xhr = new XMLHttpRequest();
+            xhr.open(method, url);
+            if (ultimateTeamSessionId) {
+                xhr.setRequestHeader('X-UT-SID', ultimateTeamSessionId);
+            }
+            xhr.addEventListener('load', function () {
+                if (this.status >= 200 && this.status < 300) {
+                    resolve(xhr.response);
+                } else {
+                    resolve({auctionInfo: [], error: {
+                        status: this.status,
+                        statusText: xhr.statusText
+                    }});
+                }
+            });
+            xhr.addEventListener('error', function () {
+                resolve({auctionInfo: [], error: {
+                    status: this.status,
+                    statusText: xhr.statusText
+                }});
+            });
+            xhr.send();
+        });
     }
 })();
