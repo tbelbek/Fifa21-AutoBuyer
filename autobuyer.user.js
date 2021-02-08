@@ -21,7 +21,7 @@
     let ultimateTeamSessionId;
 
     const setRequestHeader = XMLHttpRequest.prototype.setRequestHeader;
-    XMLHttpRequest.prototype.setRequestHeader = function() {
+    XMLHttpRequest.prototype.setRequestHeader = function () {
         const [sessionIdKey, sessionIdValue] = arguments;
         if (sessionIdKey === 'X-UT-SID') {
             ultimateTeamSessionId = sessionIdValue;
@@ -60,12 +60,12 @@
     var _searchViewModel = null;
 
 
-// DIV names
+    // DIV names
     function makeid(length) {
-        var result           = '';
-        var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        var result = '';
+        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         var charactersLength = characters.length;
-        for ( var i = 0; i < length; i++ ) {
+        for (var i = 0; i < length; i++) {
             result += characters.charAt(Math.floor(Math.random() * charactersLength));
         }
         return result;
@@ -372,8 +372,7 @@
                     writeToDebugLog(`Found ${window.userWatchItems.length} items in users watch list and ignored from selling`);
                 }
                 window.notify('Autobuyer Started');
-            }
-            else {
+            } else {
                 window.notify('Autobuyer Resumed');
             }
         });
@@ -426,12 +425,12 @@
         if (!this.initialized) {
             //getAppMain().superclass(),
             this._viewmodel || (this._viewmodel = new viewmodels.BucketedItemSearch),
-            this._viewmodel.searchCriteria.type === enums.SearchType.ANY && (this._viewmodel.searchCriteria.type = enums.SearchType.PLAYER);
+                this._viewmodel.searchCriteria.type === enums.SearchType.ANY && (this._viewmodel.searchCriteria.type = enums.SearchType.PLAYER);
 
             _searchViewModel = this._viewmodel;
 
-            var t = gConfigurationModel.getConfigObject(models.ConfigurationModel.KEY_ITEMS_PER_PAGE)
-                , count = 1 + (utils.JS.isValid(t) ? t[models.ConfigurationModel.ITEMS_PER_PAGE.TRANSFER_MARKET] : 15);
+            var t = gConfigurationModel.getConfigObject(models.ConfigurationModel.KEY_ITEMS_PER_PAGE),
+                count = 1 + (utils.JS.isValid(t) ? t[models.ConfigurationModel.ITEMS_PER_PAGE.TRANSFER_MARKET] : 15);
             this._viewmodel.searchCriteria.count = count,
                 this._viewmodel.searchFeature = enums.ItemSearchFeature.MARKET;
             var view = this.getView();
@@ -442,8 +441,8 @@
                 view.addTarget(this, this._eMaxBidPriceChanged, UTMarketSearchFiltersView.Event.MAX_BID_PRICE_CHANGE),
                 view.addTarget(this, this._eMinBuyPriceChanged, UTMarketSearchFiltersView.Event.MIN_BUY_PRICE_CHANGE),
                 view.addTarget(this, this._eMaxBuyPriceChanged, UTMarketSearchFiltersView.Event.MAX_BUY_PRICE_CHANGE),
-            this._viewmodel.getCategoryTabVisible() && (view.initTabMenuComponent(),
-                view.getTabMenuComponent().addTarget(this, this._eSearchCategoryChanged, enums.Event.TAP)),
+                this._viewmodel.getCategoryTabVisible() && (view.initTabMenuComponent(),
+                    view.getTabMenuComponent().addTarget(this, this._eSearchCategoryChanged, enums.Event.TAP)),
                 this._squadContext ? isPhone() || view.addClass("narrow") : view.addClass("floating"),
                 view.getPlayerNameSearch().addTarget(this, this._ePlayerNameChanged, enums.Event.CHANGE),
                 view.__root.style = "width: 50%; float: left;";
@@ -567,8 +566,7 @@
 
         if (minBuy) {
             window.notify("Succesfully computed the price", enums.UINotificationType.POSITIVE);
-        }
-        else {
+        } else {
             window.notify("Unable to calculate price", enums.UINotificationType.NEGATIVE);
         }
 
@@ -588,13 +586,14 @@
         while (!isMinFound) {
             if (++currentCount === 10) {
                 isMinFound = true;
-            }
-            else {
+            } else {
                 sendPinEvents("Transfer Market Search");
 
                 services.Item.clearTransferMarketCache();
 
-                let items = await window.getBinSearchResult({...criteria});
+                let items = await window.getBinSearchResult({
+                    ...criteria
+                });
                 if (items.length) {
 
                     allPrices = allPrices.concat(items.map(i => i._auction.buyNowPrice));
@@ -612,8 +611,7 @@
                         criteria.maxBuy = window.fixRandomPrice(window.getSellBidPrice(currentMin));
                     }
                     await window.waitAsync(2);
-                }
-                else {
+                } else {
                     isMinFound = true;
                 }
             }
@@ -1209,7 +1207,10 @@
         setTimeout(function () {
 
             let settingsJson = {};
-            settingsJson.searchCriteria = { criteria: _searchViewModel.searchCriteria, playerData: _searchViewModel.playerData };
+            settingsJson.searchCriteria = {
+                criteria: _searchViewModel.searchCriteria,
+                playerData: _searchViewModel.playerData
+            };
 
             settingsJson.abSettings = {};
 
@@ -1293,7 +1294,7 @@
                 settingsJson.abSettings.addDelayAfterBuy = window.addDelayAfterBuy;
             }
 
-            if(window.addFilterGK){
+            if (window.addFilterGK) {
                 settingsJson.abSettings.addFilterGK = window.addFilterGK;
             }
 
@@ -1346,8 +1347,8 @@
 
             if (filterName) {
                 filterName = filterName.toUpperCase();
-                window.checkAndOption(nameFilterDropdown,filterName);
-                window.checkAndOption(nameSelectedFilter,filterName);
+                window.checkAndOption(nameFilterDropdown, filterName);
+                window.checkAndOption(nameSelectedFilter, filterName);
 
                 $(`select[name=filters] option[value="${filterName}"]`).attr("selected", true);
                 GM_setValue(filterName, JSON.stringify(settingsJson));
@@ -1360,7 +1361,7 @@
         }, 200);
     }
 
-    window.checkAndOption = function(dropdownSelector, optionName){
+    window.checkAndOption = function (dropdownSelector, optionName) {
         let exist = false;
         $(`${dropdownSelector} option`).each(function () {
             if (this.value === optionName) {
@@ -1369,7 +1370,7 @@
             }
         });
 
-        if(!exist){
+        if (!exist) {
             $(dropdownSelector).append($('<option></option>').attr('value', optionName).text(optionName));
         }
     }
@@ -1865,7 +1866,7 @@
             if (time) {
                 time = time * multipler * 1000;
 
-time = window.getRandomArbitrary(0, time);
+                time = window.getRandomArbitrary(0, time);
 
                 window.deactivateAutoBuyer();
 
@@ -1898,8 +1899,7 @@ time = window.getRandomArbitrary(0, time);
         if (!window.eachFilterSearch) {
             if (jQuery(nameAbNumberFilterSearch).val() !== '') {
                 window.eachFilterSearch = parseInt(jQuery(nameAbNumberFilterSearch).val());
-            }
-            else {
+            } else {
                 window.eachFilterSearch = 1
             }
         }
@@ -1928,14 +1928,18 @@ time = window.getRandomArbitrary(0, time);
         // Randomize search criteria min bid to clear cache
         if (window.useRandMinBid) {
             let user_min_bid_txt = $(nameAbRandMinBidInput).val();
-            if (user_min_bid_txt == '') { user_min_bid_txt = '300' }
+            if (user_min_bid_txt == '') {
+                user_min_bid_txt = '300'
+            }
             let user_min_bid = Math.round(parseInt(user_min_bid_txt));
             searchCriteria.minBid = window.fixRandomPrice(window.getRandNum(0, user_min_bid));
             window.currentPage = 1;
         }
         if (window.useRandMinBuy) {
             let user_min_buy_txt = $(nameAbRandMinBuyInput).val();
-            if (user_min_buy_txt == '') { user_min_buy_txt = '300' }
+            if (user_min_buy_txt == '') {
+                user_min_buy_txt = '300'
+            }
             let user_min_buy = Math.round(parseInt(user_min_buy_txt));
             searchCriteria.minBuy = window.fixRandomPrice(window.getRandNum(0, user_min_buy));
             window.currentPage = 1;
@@ -2057,7 +2061,7 @@ time = window.getRandomArbitrary(0, time);
                     }
                     // ============================================================================================================
 
-                    if(player.preferredPosition == 0 && window.addFilterGK == true){
+                    if (player.preferredPosition == 0 && window.addFilterGK == true) {
                         action_txt = 'skip >>> (is a Goalkeeper)';
                         let player_name = window.getItemName(player);
                         writeToDebugLog("| " + rating_txt + ' | ' + player_name + ' | ' + bid_txt + ' | ' + buy_txt + ' | ' + expire_time + ' | ' + action_txt);
@@ -2126,8 +2130,7 @@ time = window.getRandomArbitrary(0, time);
                         writeToLog('[!!!] Captcha got triggered, trying to solve it');
                         writeToLog('------------------------------------------------------------------------------------------');
                         window.solveCaptcha();
-                    }
-                    else {
+                    } else {
                         window.showCaptchaLogs();
                     }
                 } else {
@@ -2142,7 +2145,7 @@ time = window.getRandomArbitrary(0, time);
         }));
     };
 
-    window.showCaptchaLogs = function() {
+    window.showCaptchaLogs = function () {
 
         window.sendNotificationToUser('Captcha, please solve the problem so that the bot can work again.');
 
@@ -2161,11 +2164,11 @@ time = window.getRandomArbitrary(0, time);
         var websitePublicKey = "A4EECF77-AC87-8C8D-5754-BF882F72063B";
 
         var proxyAddress = jQuery(nameProxyAddress).val();
-        var proxyPort =jQuery(nameProxyPort).val();
+        var proxyPort = jQuery(nameProxyPort).val();
         var proxyLogin = jQuery(nameProxyLogin).val();
         var proxyPassword = jQuery(nameProxyPassword).val();
 
-        if(!proxyAddress || !proxyPort || !apikey){
+        if (!proxyAddress || !proxyPort || !apikey) {
             writeToLog('Proxy info not filled properly');
             window.showCaptchaLogs();
             return;
@@ -2182,20 +2185,19 @@ time = window.getRandomArbitrary(0, time);
 
                     let payload = {
                         "clientKey": apikey,
-                        "task":
-                            {
-                                "type": "FunCaptchaTask",
-                                "websiteURL": websiteURL,
-                                "websitePublicKey": websitePublicKey,
-                                "funcaptchaApiJSSubdomain": "ea-api.arkoselabs.com",
-                                "data": responseData.response,
-                                "proxyType": "http",
-                                "proxyAddress": proxyAddress,
-                                "proxyPort": proxyPort,
-                                "proxyLogin": proxyLogin,
-                                "proxyPassword": proxyPassword,
-                                "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36"
-                            }
+                        "task": {
+                            "type": "FunCaptchaTask",
+                            "websiteURL": websiteURL,
+                            "websitePublicKey": websitePublicKey,
+                            "funcaptchaApiJSSubdomain": "ea-api.arkoselabs.com",
+                            "data": responseData.response,
+                            "proxyType": "http",
+                            "proxyAddress": proxyAddress,
+                            "proxyPort": proxyPort,
+                            "proxyLogin": proxyLogin,
+                            "proxyPassword": proxyPassword,
+                            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36"
+                        }
                     };
 
                     var xhr = new XMLHttpRequest();
@@ -2368,7 +2370,7 @@ time = window.getRandomArbitrary(0, time);
                         window.sendNotificationToUser("| " + player_name.trim() + ' | ' + price_txt.trim() + ' | buy |');
                     }
                 } else {
-                    findPlayerLowestPrice(player.resourceId, function(sellPrice) {
+                    findPlayerLowestPrice(player.resourceId, function (sellPrice) {
                         if (isBin) {
                             window.purchasedCardCount++;
                         }
@@ -2431,7 +2433,7 @@ time = window.getRandomArbitrary(0, time);
         if (bin <= 650) {
             return bin - 50;
         }
-        
+
         if (bin > 650 && bin <= 1000) {
             return bin - 100;
         }
@@ -2497,8 +2499,7 @@ time = window.getRandomArbitrary(0, time);
             }
 
             if (window.futStatistics.unsoldItems && window.reListEnabled) {
-                services.Item.relistExpiredAuctions().observe(this, function (t, response) {
-                });
+                services.Item.relistExpiredAuctions().observe(this, function (t, response) {});
             }
 
             window.futStatistics.activeTransfers = response.data.items.filter(function (item) {
@@ -2559,11 +2560,10 @@ time = window.getRandomArbitrary(0, time);
     }
 
     window.clearSoldItems = function () {
-        services.Item.clearSoldItems().observe(this, function (t, response) {
-        });
+        services.Item.clearSoldItems().observe(this, function (t, response) {});
     }
 
-        window.getRandomPause = function getRandomArbitrary(min, max) {
+    window.getRandomPause = function getRandomArbitrary(min, max) {
         var randomNum = Math.random() * (max - min) + min;
         console.log(randomNum);
         return randomNum;
@@ -2577,6 +2577,7 @@ time = window.getRandomArbitrary(0, time);
 
         if (window.useFutBin === true) {
             price = await makeRequest('GET', `https://www.futbin.com/21/playerPrices?player=${playerId}`)
+            console.log(playerId +"---Lowest from futbin:" + price);
         }
 
         do {
@@ -2586,7 +2587,7 @@ time = window.getRandomArbitrary(0, time);
             price = info.price;
             count = info.count;
 
-            if(count >= 21) {
+            if (count >= 21) {
                 const randomTimeout = Math.round(Math.random() * 1000 + 1000);
                 await delay(randomTimeout);
             }
@@ -2602,7 +2603,7 @@ time = window.getRandomArbitrary(0, time);
 
     function delay(timeout) {
         return new Promise(function (resolve, reject) {
-            setTimeout(function() {
+            setTimeout(function () {
                 resolve();
             }, timeout);
         });
@@ -2611,16 +2612,19 @@ time = window.getRandomArbitrary(0, time);
     async function findMinPlayerPriceFromMarket(playerId, maxPrice) {
         const searchPlayerPriceUrl = "https://utas.external.s2.fut.ea.com/ut/game/fifa21/transfermarket?num=21&start=0&type=player&maskedDefId=";
         let maxPriceParam = "&maxb=";
-     
+
         let requestUrl = `${searchPlayerPriceUrl}${playerId}`;
         if (maxPrice != null) {
             requestUrl = `${requestUrl}${maxPriceParam}${maxPrice}`;
         }
 
         const response = JSON.parse(await makeRequest("GET", requestUrl, ultimateTeamSessionId));
-        let currentMinPrice = response.auctionInfo.map(ai => ai.buyNowPrice).sort((a,b) => a - b).shift();
+        let currentMinPrice = response.auctionInfo.map(ai => ai.buyNowPrice).sort((a, b) => a - b).shift();
 
-        return {price: currentMinPrice, count: response.auctionInfo.length};
+        return {
+            price: currentMinPrice,
+            count: response.auctionInfo.length
+        };
     }
 
     function makeRequest(method, url, ultimateTeamSessionId) {
@@ -2634,17 +2638,23 @@ time = window.getRandomArbitrary(0, time);
                 if (this.status >= 200 && this.status < 300) {
                     resolve(xhr.response);
                 } else {
-                    resolve({auctionInfo: [], error: {
-                        status: this.status,
-                        statusText: xhr.statusText
-                    }});
+                    resolve({
+                        auctionInfo: [],
+                        error: {
+                            status: this.status,
+                            statusText: xhr.statusText
+                        }
+                    });
                 }
             });
             xhr.addEventListener('error', function () {
-                resolve({auctionInfo: [], error: {
-                    status: this.status,
-                    statusText: xhr.statusText
-                }});
+                resolve({
+                    auctionInfo: [],
+                    error: {
+                        status: this.status,
+                        statusText: xhr.statusText
+                    }
+                });
             });
             xhr.send();
         });
