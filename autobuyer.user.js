@@ -1986,6 +1986,11 @@
                     window.currentPage = 1;
                 }
 
+                if (window.currentPage > 5) {
+                    window.currentPage = 1;
+                    console.log("page reset to 1");
+                }
+
                 response.data.items.sort(function (a, b) {
                     var priceDiff = a._auction.buyNowPrice - b._auction.buyNowPrice;
 
@@ -2577,7 +2582,7 @@
 
         if (window.useFutBin === true) {
             price = await makeRequest('GET', `https://www.futbin.com/21/playerPrices?player=${playerId}`)
-            console.log(playerId +"---Lowest from futbin:" + price);
+            console.log(playerId + "---Lowest from futbin:" + price);
         }
 
         do {
