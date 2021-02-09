@@ -1991,7 +1991,7 @@
                     window.currentPage = 1;
                 }
 
-                if (window.currentPage > 5) {
+                if (window.currentPage > 3) {
                     window.currentPage = 1;
                     writeToDebugLog('-------------------------------------------Page reset to 1------------------------------------------------------------');
                 }
@@ -2577,96 +2577,5 @@
         var randomNum = Math.random() * (max - min) + min;
         console.log(randomNum / 1000 + " secs of wait");
         return randomNum;
-    }
-
-    async function findPlayerLowestPrice(playerId, callbackFn) {
-        let lastPrice = 0;
-        let price = 0;
-        let count = 0;
-        let tryCount = 0;
-
-        if (window.useFutBin === true) {
-            price = await makeRequest('GET', `https://www.futbin.com/21/playerPrices?player=${playerId}`)
-            console.log(playerId + "---Lowest from futbin:" + price);
-        }
-
-        do {
-            tryCount++;
-            lastPrice = price;
-            const info = await findMinPlayerPriceFromMarket(playerId, price <= 0 ? null : window.getSellBidPrice(price));
-            price = info.price;
-            count = info.count;
-
-            if (count >= 21) {
-                const randomTimeout = Math.round(Math.random() * 1000 + 1000);
-                await delay(randomTimeout);
-            }
-        } while (count >= 21);
-
-        if (count <= 0) {
-            price = window.getSellBidPrice(lastPrice);
-        }
-
-        writeToDebugLog(`Search attempts to find lower price: ${tryCount}`);
-        callbackFn(price);
-    }
-
-    function delay(timeout) {
-        return new Promise(function (resolve, reject) {
-            setTimeout(function () {
-                resolve();
-            }, timeout);
-        });
-    }
-
-    async function findMinPlayerPriceFromMarket(playerId, maxPrice) {
-        const searchPlayerPriceUrl = "https://utas.external.s2.fut.ea.com/ut/game/fifa21/transfermarket?num=21&start=0&type=player&maskedDefId=";
-        let maxPriceParam = "&maxb=";
-
-        let requestUrl = `${searchPlayerPriceUrl}${playerId}`;
-        if (maxPrice != null) {
-            requestUrl = `${requestUrl}${maxPriceParam}${maxPrice}`;
-        }
-
-        const response = JSON.parse(await makeRequest("GET", requestUrl, ultimateTeamSessionId));
-        let currentMinPrice = response.auctionInfo.map(ai => ai.buyNowPrice).sort((a, b) => a - b).shift();
-
-        return {
-            price: currentMinPrice,
-            count: response.auctionInfo.length
-        };
-    }
-
-    function makeRequest(method, url, ultimateTeamSessionId) {
-        return new Promise(function (resolve, reject) {
-            let xhr = new XMLHttpRequest();
-            xhr.open(method, url);
-            if (ultimateTeamSessionId) {
-                xhr.setRequestHeader('X-UT-SID', ultimateTeamSessionId);
-            }
-            xhr.addEventListener('load', function () {
-                if (this.status >= 200 && this.status < 300) {
-                    resolve(xhr.response);
-                } else {
-                    resolve({
-                        auctionInfo: [],
-                        error: {
-                            status: this.status,
-                            statusText: xhr.statusText
-                        }
-                    });
-                }
-            });
-            xhr.addEventListener('error', function () {
-                resolve({
-                    auctionInfo: [],
-                    error: {
-                        status: this.status,
-                        statusText: xhr.statusText
-                    }
-                });
-            });
-            xhr.send();
-        });
     }
 })();
